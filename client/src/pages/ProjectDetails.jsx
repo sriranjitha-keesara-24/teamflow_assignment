@@ -11,7 +11,7 @@ import ProjectTasks from "../components/task/ProjectTasks";
 import RCAPage from "./RCAPage";
 import useAuth from "../hooks/useAuth";
 import { statusBadgeClass, priorityBadgeClass, formatDate } from "../utils/formatters";
-import "../styles/Projects.css";
+import "../styles/Projects.css"
 import "../styles/rca.css";
 
 const TABS = ["Overview", "Tasks", "RCA Reports", "Reports & Export"];
