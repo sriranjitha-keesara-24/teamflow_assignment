@@ -26,8 +26,8 @@ export const deleteProject = async (id) => {
 };
 
 export const setArchiveStatus = async (id, archived) => {
-  const { data } = await api.patch(`/projects/${id}/archive`, { archived });
-  return data;
+  const { data } = await api.put(`/projects/${id}`, { status: archived ? "Archived" : "Active" });
+  return { project: data.data || data, message: `Project successfully ${archived ? "archived" : "activated"}` };
 };
 
 export const getProjectStats = async (id) => {
@@ -41,7 +41,7 @@ export const addMember = async (id, userId, role) => {
 };
 
 export const updateMemberRole = async (id, userId, role) => {
-  const { data } = await api.patch(`/projects/${id}/members/${userId}`, { role });
+  const { data } = await api.put(`/projects/${id}/members/${userId}/role`, { role });
   return data;
 };
 

@@ -63,8 +63,8 @@ const ProjectDetails = () => {
     );
   }
 
-  const isOwner = project.owner?._id === user.id;
-  const memberEntry = project.members?.find((m) => m.user?._id === user.id);
+  const isOwner = project.owner?._id === (user._id || user.id);
+  const memberEntry = project.members?.find((m) => m.user?._id === (user._id || user.id));
   const canManage = isOwner || memberEntry?.role === "Lead" || memberEntry?.role === "Manager" || user.role === "Admin" || user.role === "Manager";
 
   const handleArchiveToggle = async () => {
@@ -208,7 +208,7 @@ const ProjectDetails = () => {
           <div style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: "var(--radius-lg)", padding: 22 }}>
             <MemberList
               projectId={project._id}
-              currentUserId={user.id}
+              currentUserId={user._id || user.id}
               canManage={canManage}
             />
           </div>

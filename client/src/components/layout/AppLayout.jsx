@@ -26,7 +26,7 @@ const AppLayout = () => {
     const socket = io(socketUrl, {
       transports: ["websocket"],
       auth: { token: `Bearer ${token}` },
-      query: { userId: user.id },
+      query: { userId: user._id || user.id },
     });
 
     socket.on("connect", () => {
@@ -48,7 +48,7 @@ const AppLayout = () => {
     return () => {
       socket.disconnect();
     };
-  }, [user.id]);
+  }, [user._id, user.id]);
 
   // Handle Ctrl+K shortcut for search
   useEffect(() => {

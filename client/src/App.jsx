@@ -16,6 +16,7 @@ import MyTasks from "./pages/MyTasks";
 import RCAPage from "./pages/RCAPage";
 import Notifications from "./pages/Notifications";
 import Profile from "./pages/Profile";
+import AdminPanel from "./pages/AdminPanel";
 import AppLayout from "./components/layout/AppLayout";
 
 function App() {
@@ -46,6 +47,7 @@ function App() {
           <Route path="/rca/:id" element={<RCAPage />} />
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/admin" element={<AdminPanel />} />
         </Route>
 
         <Route path="/" element={<Navigate to="/dashboard" replace />} />

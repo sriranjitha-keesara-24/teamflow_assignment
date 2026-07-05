@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import useAuth from "../hooks/useAuth";
 import { updateUserProfile, logoutUser, uploadAvatar } from "../services/authService";
 import {
@@ -33,22 +33,35 @@ export default function Profile() {
   };
 
   // Profile data states
-  const [name, setName] = useState(user?.name || "Honey");
-  const [bio, setBio] = useState(user?.bio || "Until I change it");
-  const [phone, setPhone] = useState(user?.phone || "+91 98765 43210");
+  const [name, setName] = useState(user?.name || "");
+  const [bio, setBio] = useState(user?.bio || "");
+  const [phone, setPhone] = useState(user?.phone || "");
   const [avatar, setAvatar] = useState(user?.avatar || "");
+  const [skills, setSkills] = useState(user?.skills || []);
 
   // Editing toggle states
   const [isEditingName, setIsEditingName] = useState(false);
   const [isEditingBio, setIsEditingBio] = useState(false);
   const [isEditingPhone, setIsEditingPhone] = useState(false);
+  const [isEditingSkills, setIsEditingSkills] = useState(false);
 
   // Form input buffer states
   const [nameInput, setNameInput] = useState(name);
   const [bioInput, setBioInput] = useState(bio);
   const [phoneInput, setPhoneInput] = useState(phone);
+  const [skillsInput, setSkillsInput] = useState(Array.isArray(skills) ? skills.join(", ") : "");
 
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      setName(user.name || "");
+      setBio(user.bio || "");
+      setPhone(user.phone || "");
+      setAvatar(user.avatar || "");
+      setSkills(user.skills || []);
+    }
+  }, [user]);
 
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
@@ -77,6 +90,7 @@ export default function Profile() {
         name: fieldName === "name" ? val : name,
         bio: fieldName === "bio" ? val : bio,
         phone: fieldName === "phone" ? val : phone,
+        skills: fieldName === "skills" ? val : skills.join(", "),
         avatar,
       };
 
@@ -89,12 +103,16 @@ export default function Profile() {
         setIsEditingName(false);
       }
       if (fieldName === "bio") {
-        setBio(res.user.bio || "Until I change it");
+        setBio(res.user.bio || "");
         setIsEditingBio(false);
       }
       if (fieldName === "phone") {
-        setPhone(res.user.phone || "+91 98765 43210");
+        setPhone(res.user.phone || "");
         setIsEditingPhone(false);
+      }
+      if (fieldName === "skills") {
+        setSkills(res.user.skills || []);
+        setIsEditingSkills(false);
       }
       toast.success("Profile updated");
     } catch (err) {
@@ -404,6 +422,35 @@ export default function Profile() {
                 <span className="profile-settings-value">{phone || "Not set"}</span>
               </div>
               <button className="profile-edit-btn" onClick={() => { setPhoneInput(phone); setIsEditingPhone(true); }}>
+                <FiEdit2 size={14} />
+              </button>
+            </>
+          )}
+        </div>
+
+        {/* Skills detail row */}
+        <div className="profile-settings-row">
+          {isEditingSkills ? (
+            <div className="profile-input-edit">
+              <input
+                type="text"
+                placeholder="React, Node, CSS (comma separated)"
+                value={skillsInput}
+                onChange={(e) => setSkillsInput(e.target.value)}
+              />
+              <button className="profile-input-btn" onClick={() => saveField("skills", skillsInput)}>
+                <FiCheck size={16} />
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="profile-settings-content">
+                <span className="profile-settings-label">Skills</span>
+                <span className="profile-settings-value">
+                  {skills && skills.length > 0 ? skills.join(", ") : "No skills added"}
+                </span>
+              </div>
+              <button className="profile-edit-btn" onClick={() => { setSkillsInput(skills ? skills.join(", ") : ""); setIsEditingSkills(true); }}>
                 <FiEdit2 size={14} />
               </button>
             </>

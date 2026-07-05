@@ -3,14 +3,14 @@ import { getProjectById, addMember, updateMemberRole, removeMember, searchUsers 
 import { getInitials } from "../../utils/formatters";
 import toast from "react-hot-toast";
 
-const ROLES = ["Manager", "Developer", "Viewer"];
+const ROLES = ["Lead", "Member", "Viewer"];
 
 export default function MemberList({ projectId, currentUserId, canManage }) {
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [newUserId, setNewUserId] = useState("");
-  const [newRole, setNewRole] = useState("Developer");
+  const [newRole, setNewRole] = useState("Member");
 
   // Search autocomplete states
   const [searchQuery, setSearchQuery] = useState("");
@@ -68,7 +68,20 @@ export default function MemberList({ projectId, currentUserId, canManage }) {
 
   const handleAdd = async (e) => {
     e.preventDefault();
-    const targetUserId = newUserId.trim();
+    let targetUserId = newUserId.trim();
+
+    // Fallback: If no user was clicked but search matches exactly
+    if (!targetUserId && searchQuery.trim()) {
+      const match = searchResults.find(
+        (u) =>
+          u.name.toLowerCase() === searchQuery.trim().toLowerCase() ||
+          u.email.toLowerCase() === searchQuery.trim().toLowerCase()
+      );
+      if (match) {
+        targetUserId = match._id;
+      }
+    }
+
     if (!targetUserId) {
       toast.error("Please search and select a user to add");
       return;
@@ -201,7 +214,7 @@ export default function MemberList({ projectId, currentUserId, canManage }) {
                   <div
                     key={user._id}
                     className="autocomplete-option"
-                    onClick={() => handleSelectUser(user)}
+                    onMouseDown={() => handleSelectUser(user)}
                   >
                     <div style={{ fontWeight: 600 }}>{user.name}</div>
                     <div style={{ fontSize: 11, color: "var(--color-text-muted)" }}>{user.email}</div>

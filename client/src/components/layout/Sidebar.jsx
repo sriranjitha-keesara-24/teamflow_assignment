@@ -9,6 +9,7 @@ import {
   FiBell,
   FiLogOut,
   FiX,
+  FiShield,
 } from "react-icons/fi";
 
 const Sidebar = ({ open, setOpen }) => {
@@ -78,6 +79,16 @@ const Sidebar = ({ open, setOpen }) => {
           <FiBell />
           <span>Notifications</span>
         </NavLink>
+        {user?.role === "Admin" && (
+          <NavLink
+            to="/admin"
+            className={({ isActive }) => `sidebar-link ${isActive ? "active" : ""}`}
+            onClick={() => setOpen(false)}
+          >
+            <FiShield />
+            <span>Admin Panel</span>
+          </NavLink>
+        )}
       </nav>
 
       <div className="sidebar-footer">
