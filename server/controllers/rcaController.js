@@ -2,7 +2,7 @@ const RCA = require('../models/RCA');
 const Project = require('../models/Project');
 const Review = require('../models/Review');
 const ActivityLog = require('../models/ActivityLog');
-const { createNotification } = require('../services/notificationService');
+const { createNotification } = require('../Services/NotificationService');
 
 /**
  * @desc    Get all RCAs for a project
