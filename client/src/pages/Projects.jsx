@@ -4,7 +4,7 @@ import toast from "react-hot-toast";
 import { getProjects } from "../services/projectService";
 import ProjectCard from "../components/projects/ProjectCard";
 import ProjectModal from "../components/projects/ProjectModal";
-import "../styles/projects.css";
+import "../styles/Projects.css";
 
 const STATUS_FILTERS = ["All", "Active", "On Hold", "Completed", "Archived"];
 
