@@ -3,7 +3,7 @@ const Project = require('../models/Project');
 const ActivityLog = require('../models/ActivityLog');
 const taskDependencyService = require('../services/taskDependencyService');
 const { ApiError } = require('../middleware/errorMiddleware');
-const { createNotification } = require('../services/notificationService');
+const { createNotification } = require('../Services/notificationService');
 
 // ─── Helper: verify user has access to the project ───────────────
 const assertAccess = async (projectId, userId, role) => {
