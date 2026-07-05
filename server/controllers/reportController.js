@@ -1,4 +1,4 @@
-const reportService = require('../Services/reportService.js');
+const reportService = require('../Services/reportService');
 const Task = require('../models/Task');
 const RCA = require('../models/RCA');
 const { exportToCsvString } = require('../utils/csvExporter');
