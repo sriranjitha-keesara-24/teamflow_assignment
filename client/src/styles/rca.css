@@ -1,0 +1,321 @@
+/* ── RCA List ──────────────────────────────────────── */
+.rca-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rca-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 18px 22px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.rca-card:hover {
+  border-color: var(--color-border-light);
+  background: var(--color-surface-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.rca-status-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 6px;
+}
+
+.rca-status-indicator.Draft { background: var(--color-text-muted); }
+.rca-status-indicator.Submitted { background: var(--color-info); }
+.rca-status-indicator.Under\ Review { background: var(--color-warning); }
+.rca-status-indicator.Approved { background: var(--color-success); }
+.rca-status-indicator.Rejected { background: var(--color-danger); }
+.rca-status-indicator.Needs\ Revision { background: #f59e0b; }
+
+.rca-card-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.rca-card-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 4px;
+}
+
+.rca-card-excerpt {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.rca-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.rca-card-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ── RCA Detail ───────────────────────────────────── */
+.rca-detail {
+  max-width: 800px;
+  animation: fadeIn 0.3s ease;
+}
+
+.rca-detail-header {
+  margin-bottom: 24px;
+}
+
+.rca-detail-title {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: 10px;
+}
+
+.rca-detail-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.rca-section {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 22px;
+  margin-bottom: 16px;
+}
+
+.rca-section-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rca-section-content {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.rca-section-empty {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.rca-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 24px;
+  flex-wrap: wrap;
+}
+
+/* ── RCA Form (Modal) ─────────────────────────────── */
+.rca-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.rca-form textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+/* Review area */
+.rca-review-area {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 22px;
+  margin-top: 20px;
+}
+
+.rca-review-title {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 14px;
+  color: var(--color-text);
+}
+
+/* Status badge for RCA */
+.rca-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: var(--radius-full);
+}
+
+.rca-status-badge.Draft {
+  background: rgba(100, 116, 139, 0.15);
+  color: var(--color-text-muted);
+}
+
+.rca-status-badge.Submitted {
+  background: var(--color-info-dim);
+  color: var(--color-info);
+}
+
+.rca-status-badge.Under-Review {
+  background: var(--color-warning-dim);
+  color: var(--color-warning);
+}
+
+.rca-status-badge.Approved {
+  background: var(--color-success-dim);
+  color: var(--color-success);
+}
+
+.rca-status-badge.Rejected {
+  background: var(--color-danger-dim);
+  color: var(--color-danger);
+}
+
+.rca-status-badge.Needs-Revision {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+}
+
+/* ── Search Modal ─────────────────────────────────── */
+.search-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 15vh;
+  z-index: 2000;
+  animation: fadeIn 0.15s ease;
+}
+
+.search-modal {
+  width: 100%;
+  max-width: 560px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  animation: scaleIn 0.2s ease;
+}
+
+.search-modal-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.search-modal-input-wrap svg {
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.search-modal-input-wrap input {
+  flex: 1;
+  border: none;
+  background: none;
+  font-size: 15px;
+  padding: 0;
+  outline: none;
+  color: var(--color-text);
+}
+
+.search-modal-input-wrap input:focus {
+  box-shadow: none;
+}
+
+.search-results {
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+.search-results-group {
+  padding: 8px 0;
+}
+
+.search-results-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+  padding: 4px 20px 8px;
+}
+
+.search-result-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.search-result-item:hover {
+  background: var(--color-surface-hover);
+}
+
+.search-result-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 14px;
+}
+
+.search-result-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.search-result-subtitle {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.search-empty {
+  padding: 32px 20px;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 14px;
+}

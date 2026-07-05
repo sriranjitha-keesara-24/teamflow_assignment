@@ -1,0 +1,68 @@
+:root {
+  /* ── Brand ─────────────────────────────────────── */
+  --color-primary: #6366f1;
+  --color-primary-hover: #818cf8;
+  --color-primary-dim: rgba(99, 102, 241, 0.15);
+  --color-primary-glow: rgba(99, 102, 241, 0.25);
+  --color-accent: #a78bfa;
+
+  /* ── Status ────────────────────────────────────── */
+  --color-success: #22c55e;
+  --color-success-dim: rgba(34, 197, 94, 0.15);
+  --color-danger: #ef4444;
+  --color-danger-dim: rgba(239, 68, 68, 0.15);
+  --color-warning: #f59e0b;
+  --color-warning-dim: rgba(245, 158, 11, 0.15);
+  --color-info: #3b82f6;
+  --color-info-dim: rgba(59, 130, 246, 0.15);
+
+  /* ── Dark Surfaces ─────────────────────────────── */
+  --color-bg: #0a0e1a;
+  --color-surface: #121829;
+  --color-surface-hover: #1a2236;
+  --color-surface-raised: #1e2640;
+  --color-border: #232d45;
+  --color-border-light: #2a3654;
+  --color-text: #e8eaf0;
+  --color-text-secondary: #94a3b8;
+  --color-text-muted: #64748b;
+
+  /* ── Glassmorphism ─────────────────────────────── */
+  --glass-bg: rgba(18, 24, 41, 0.72);
+  --glass-border: rgba(99, 102, 241, 0.12);
+  --glass-blur: 16px;
+
+  /* ── Gradients ─────────────────────────────────── */
+  --gradient-brand: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a78bfa 100%);
+  --gradient-surface: linear-gradient(145deg, #121829 0%, #0f1420 100%);
+  --gradient-card: linear-gradient(160deg, rgba(30, 38, 64, 0.6) 0%, rgba(18, 24, 41, 0.8) 100%);
+
+  /* ── Shadows ───────────────────────────────────── */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.45);
+  --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.15);
+  --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.25), 0 0 0 1px var(--color-border);
+
+  /* ── Radius ────────────────────────────────────── */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+
+  /* ── Transitions ───────────────────────────────── */
+  --transition-fast: 0.15s ease;
+  --transition-base: 0.2s ease;
+  --transition-slow: 0.35s ease;
+
+  /* ── Layout ────────────────────────────────────── */
+  --sidebar-width: 260px;
+  --sidebar-collapsed: 72px;
+  --topbar-height: 64px;
+
+  /* ── Font ───────────────────────────────────────── */
+  --font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+}
