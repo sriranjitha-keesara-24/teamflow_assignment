@@ -1,7 +1,7 @@
 const Task = require('../models/Task');
 const Project = require('../models/Project');
 const ActivityLog = require('../models/ActivityLog');
-const taskDependencyService = require('../services/taskDependencyService');
+const taskDependencyService = require('../Services/TaskDependencyService');
 const { ApiError } = require('../middleware/errorMiddleware');
 const { createNotification } = require('../Services/notificationService');
 
