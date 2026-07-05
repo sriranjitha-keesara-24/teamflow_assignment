@@ -18,7 +18,7 @@ const {
 } = require('../controllers/taskController');
 const { protect } = require('../middleware/authMiddleware');
 // const { validate } = require('../middleware/validateRequest');
-const { createTaskSchema, updateTaskSchema, reorderTasksSchema, addDependencySchema } = require('../validators/taskValidators');
+const { createTaskSchema, updateTaskSchema, reorderTasksSchema, addDependencySchema } = require('../validators/TaskValidator');
 const { validate } = require('../middleware/validateRequest');
 
 
