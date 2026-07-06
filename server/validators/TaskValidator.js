@@ -19,6 +19,7 @@ const createTaskSchema = Joi.object({
       })
     )
     .default([]),
+  recurrence: Joi.string().valid('None', 'Daily', 'Weekly', 'Monthly').default('None'),
 });
 
 const updateTaskSchema = Joi.object({
@@ -37,6 +38,7 @@ const updateTaskSchema = Joi.object({
     })
   ),
   order: Joi.number().integer(),
+  recurrence: Joi.string().valid('None', 'Daily', 'Weekly', 'Monthly'),
 }).min(1);
 
 const reorderTasksSchema = Joi.object({
