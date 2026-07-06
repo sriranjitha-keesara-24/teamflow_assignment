@@ -80,4 +80,12 @@ projectSchema.index({ owner: 1 });
 projectSchema.index({ 'members.user': 1 });
 projectSchema.index({ name: 'text', description: 'text' });
 
+projectSchema.methods.isMember = function (userId) {
+  return this.members.some((m) => m.user.toString() === userId.toString());
+};
+
+projectSchema.methods.getMember = function (userId) {
+  return this.members.find((m) => m.user.toString() === userId.toString());
+};
+
 module.exports = mongoose.model('Project', projectSchema);

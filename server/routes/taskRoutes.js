@@ -15,6 +15,9 @@ const {
     removeDependency,
     getDependencyGraph,
     getMyTasks,
+    startTaskTimer,
+    stopTaskTimer,
+    logTaskTimeManually,
 } = require('../controllers/taskController');
 const { protect } = require('../middleware/authMiddleware');
 // const { validate } = require('../middleware/validateRequest');
@@ -48,5 +51,10 @@ router.delete('/:id/subtasks/:subtaskId', deleteSubtask);
 router.post('/project/:projectId/dependencies', validate(addDependencySchema), addDependency);
 router.delete('/project/:projectId/dependencies/:relationId', removeDependency);
 router.get('/project/:projectId/dependencies', getDependencyGraph);
+
+// Time tracking
+router.post('/:id/timer/start', startTaskTimer);
+router.post('/:id/timer/stop', stopTaskTimer);
+router.post('/:id/time-log', logTaskTimeManually);
 
 module.exports = router;

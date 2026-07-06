@@ -5,3 +5,6 @@ export const adminGetUsersList = () =>
 
 export const toggleUserActivation = (id) =>
   api.put(`/users/${id}/status`).then((res) => res.data);
+
+export const adminGetAuditLogs = () =>
+  api.get("/users/admin/audit-logs").then((res) => res.data);

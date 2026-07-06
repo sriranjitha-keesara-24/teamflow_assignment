@@ -1,16 +1,26 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import toast from "react-hot-toast";
-import { FiArrowLeft, FiEdit2, FiArchive, FiTrash2, FiFileText, FiPlus, FiDownload } from "react-icons/fi";
-import { getProjectById, getProjectStats, setArchiveStatus, deleteProject } from "../services/projectService";
+import { FiArrowLeft, FiEdit2, FiArchive, FiTrash2, FiFileText, FiPlus, FiDownload, FiFolder, FiCheckSquare, FiAlertCircle, FiActivity } from "react-icons/fi";
+import { getProjectById, getProjectStats, setArchiveStatus, deleteProject, getProjectActivities } from "../services/projectService";
 import { rcaService } from "../services/rcaService";
 import { reportService } from "../services/reportService";
+import StatCard from "../components/analytics/StatCard";
+import {
+  ProjectHealthWidget,
+  TaskStatusChart,
+  RCAStatusChart,
+  TeamWorkloadChart,
+  RcaTrendChart,
+} from "../components/analytics/ChartWidgets";
+import ExportButton from "../components/analytics/ExportButton";
 import ProjectModal from "../components/projects/ProjectModal";
 import MemberList from "../components/projects/MemberList";
 import ProjectTasks from "../components/task/ProjectTasks";
 import RCAPage from "./RCAPage";
 import useAuth from "../hooks/useAuth";
-import { statusBadgeClass, priorityBadgeClass, formatDate } from "../utils/formatters";
+import { statusBadgeClass, priorityBadgeClass, formatDate, getInitials } from "../utils/formatters";
+import { formatRelativeTime } from "../utils/formatDate";
 import "../styles/Projects.css"
 import "../styles/rca.css";
 
@@ -30,6 +40,27 @@ const ProjectDetails = () => {
   const [activeTab, setActiveTab] = useState("Overview");
   const [showEditModal, setShowEditModal] = useState(false);
   const [showRcaModal, setShowRcaModal] = useState(false);
+  const [dashboardReport, setDashboardReport] = useState(null);
+  const [reportLoading, setReportLoading] = useState(false);
+  const [activities, setActivities] = useState([]);
+
+  useEffect(() => {
+    const loadReportData = async () => {
+      if (activeTab === "Reports & Export" && !dashboardReport) {
+        try {
+          setReportLoading(true);
+          const res = await reportService.getDashboardReport(id);
+          setDashboardReport(res.data || res);
+        } catch (err) {
+          console.error("Error loading dashboard report:", err);
+          toast.error("Failed to load project reports");
+        } finally {
+          setReportLoading(false);
+        }
+      }
+    };
+    loadReportData();
+  }, [activeTab, id, dashboardReport]);
 
   const loadProjectData = async () => {
     try {
@@ -41,6 +72,9 @@ const ProjectDetails = () => {
 
       const rcaRes = await rcaService.getByProject(id);
       setRcas(rcaRes.data || []);
+
+      const activitiesRes = await getProjectActivities(id);
+      setActivities(activitiesRes.activities || []);
     } catch (err) {
       console.error("Error loading project data:", err);
       toast.error(err.response?.data?.message || "Could not load project");
@@ -210,7 +244,45 @@ const ProjectDetails = () => {
               projectId={project._id}
               currentUserId={user._id || user.id}
               canManage={canManage}
+              onMembersUpdated={(updatedMembers) => {
+                setProject((prev) => ({ ...prev, members: updatedMembers }));
+              }}
             />
+          </div>
+
+          {/* Recent Activity Feed */}
+          <div style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: "var(--radius-lg)", padding: 22 }}>
+            <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
+              <FiActivity style={{ color: "var(--color-primary-hover)" }} /> Recent Project Activity
+            </h3>
+            {activities.length === 0 ? (
+              <p style={{ color: "var(--color-text-muted)", fontSize: 13.5 }}>No recent activities logged for this project.</p>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 14, maxHeight: 300, overflowY: "auto", paddingRight: 4 }}>
+                {activities.map((act) => (
+                  <div key={act._id} style={{ display: "flex", gap: 12, fontSize: 13, borderBottom: "1px solid var(--color-border)", paddingBottom: 10 }}>
+                    <div className="avatar" style={{ fontSize: 9, width: 24, height: 24, flexShrink: 0 }}>
+                      {act.user?.avatar ? (
+                        <img src={act.user.avatar.startsWith("http") ? act.user.avatar : `${import.meta.env.VITE_API_BASE_URL.replace("/api/v1", "")}${act.user.avatar}`} alt={act.user.name} style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }} />
+                      ) : (
+                        getInitials(act.user?.name)
+                      )}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                        <span style={{ fontWeight: 650, color: "var(--color-text)" }}>{act.user?.name || "System"}</span>
+                        <span style={{ fontSize: 11, color: "var(--color-text-muted)" }}>
+                          {formatRelativeTime(act.createdAt)}
+                        </span>
+                      </div>
+                      <p style={{ color: "var(--color-text-secondary)", marginTop: 2 }}>
+                        {act.action}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -228,29 +300,73 @@ const ProjectDetails = () => {
       )}
 
       {activeTab === "Reports & Export" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-          <div className="card" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <h3 style={{ fontSize: 15, fontWeight: 700 }}>Export Project Workspace Data</h3>
-            <p style={{ color: "var(--color-text-muted)", fontSize: 13.5 }}>
-              Export project tasks, checklists, priorities, and root cause analysis incident logs into formatted CSV files.
-            </p>
-            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 8 }}>
-              <button
-                className="btn btn-primary"
-                style={{ display: "flex", alignItems: "center", gap: 8 }}
-                onClick={() => handleExportCSV("tasks")}
-              >
-                <FiDownload /> Download Tasks CSV
-              </button>
-              <button
-                className="btn btn-secondary"
-                style={{ display: "flex", alignItems: "center", gap: 8 }}
-                onClick={() => handleExportCSV("rca")}
-              >
-                <FiDownload /> Download RCA Logs CSV
-              </button>
+        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+          {reportLoading ? (
+            <div className="loading-center" style={{ minHeight: 250 }}>
+              <div className="spinner" />
             </div>
-          </div>
+          ) : !dashboardReport ? (
+            <div style={{ textAlign: "center", padding: 40, color: "var(--color-text-muted)" }}>
+              No report data available.
+            </div>
+          ) : (
+            <>
+              {/* Stats Cards */}
+              <div className="stat-cards" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16 }}>
+                <StatCard
+                  title="Total Tasks"
+                  value={dashboardReport.taskStats?.completion?.total ?? 0}
+                  icon={FiFolder}
+                  subtext="Total tasks created in project"
+                />
+                <StatCard
+                  title="Completed Tasks"
+                  value={dashboardReport.taskStats?.completion?.completed ?? 0}
+                  icon={FiCheckSquare}
+                  subtext="Successfully completed tasks"
+                  trend="positive"
+                  trendValue={`${dashboardReport.taskStats?.completion?.rate ?? 0}% rate`}
+                />
+                <StatCard
+                  title="Overdue Tasks"
+                  value={dashboardReport.taskStats?.overdue ?? 0}
+                  icon={FiAlertCircle}
+                  subtext="Unfinished past due date"
+                  trend={(dashboardReport.taskStats?.overdue ?? 0) > 0 ? "negative" : "positive"}
+                  trendValue={(dashboardReport.taskStats?.overdue ?? 0) > 0 ? `${dashboardReport.taskStats?.overdue} urgent` : "0 issues"}
+                />
+                <StatCard
+                  title="Active RCAs"
+                  value={dashboardReport.rcaStats?.total ?? 0}
+                  icon={FiActivity}
+                  subtext="Root Cause Analyses created"
+                />
+              </div>
+
+              {/* Charts Grid */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 24 }}>
+                <ProjectHealthWidget health={dashboardReport.health} />
+                <TaskStatusChart data={dashboardReport.taskStats?.status} />
+                <RCAStatusChart data={dashboardReport.rcaStats?.statuses} />
+                <TeamWorkloadChart workload={dashboardReport.teamWorkload} />
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <RcaTrendChart trend={dashboardReport.rcaTrend} />
+                </div>
+              </div>
+
+              {/* CSV Export panel */}
+              <div className="card" style={{ display: "flex", flexDirection: "column", gap: 12, background: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: "var(--radius-lg)", padding: 22 }}>
+                <h3 style={{ fontSize: 15, fontWeight: 700 }}>Export Project Workspace Data</h3>
+                <p style={{ color: "var(--color-text-muted)", fontSize: 13.5 }}>
+                  Export project tasks, checklists, priorities, and root cause analysis incident logs into formatted CSV files.
+                </p>
+                <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 8 }}>
+                  <ExportButton label="Download Tasks CSV" onExport={() => handleExportCSV("tasks")} type="primary" />
+                  <ExportButton label="Download RCA Logs CSV" onExport={() => handleExportCSV("rca")} type="secondary" />
+                </div>
+              </div>
+            </>
+          )}
         </div>
       )}
 

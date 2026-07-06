@@ -17,6 +17,8 @@ import RCAPage from "./pages/RCAPage";
 import Notifications from "./pages/Notifications";
 import Profile from "./pages/Profile";
 import AdminPanel from "./pages/AdminPanel";
+import Reviews from "./pages/Reviews";
+import Reports from "./pages/Reports";
 import AppLayout from "./components/layout/AppLayout";
 
 function App() {
@@ -48,6 +50,8 @@ function App() {
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/admin" element={<AdminPanel />} />
+          <Route path="/reviews" element={<Reviews />} />
+          <Route path="/projects/:id/reports" element={<Reports />} />
         </Route>
 
         <Route path="/" element={<Navigate to="/dashboard" replace />} />

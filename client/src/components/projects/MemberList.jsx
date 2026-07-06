@@ -5,7 +5,7 @@ import toast from "react-hot-toast";
 
 const ROLES = ["Lead", "Member", "Viewer"];
 
-export default function MemberList({ projectId, currentUserId, canManage }) {
+export default function MemberList({ projectId, currentUserId, canManage, onMembersUpdated }) {
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -89,7 +89,9 @@ export default function MemberList({ projectId, currentUserId, canManage }) {
     try {
       setError("");
       const data = await addMember(projectId, targetUserId, newRole);
-      setMembers(data.data?.members || data.project?.members || data.members || []);
+      const updatedMembers = data.data?.members || data.project?.members || data.members || [];
+      setMembers(updatedMembers);
+      if (onMembersUpdated) onMembersUpdated(updatedMembers);
       setNewUserId("");
       setSearchQuery("");
       setSelectedUser(null);
@@ -106,7 +108,9 @@ export default function MemberList({ projectId, currentUserId, canManage }) {
     try {
       setError("");
       const data = await removeMember(projectId, userId);
-      setMembers(data.data?.members || data.project?.members || data.members || []);
+      const updatedMembers = data.data?.members || data.project?.members || data.members || [];
+      setMembers(updatedMembers);
+      if (onMembersUpdated) onMembersUpdated(updatedMembers);
       toast.success("Team member removed");
     } catch (err) {
       const msg = err.response?.data?.message || "Failed to remove member.";
@@ -119,7 +123,9 @@ export default function MemberList({ projectId, currentUserId, canManage }) {
     try {
       setError("");
       const data = await updateMemberRole(projectId, userId, role);
-      setMembers(data.data?.members || data.project?.members || data.members || []);
+      const updatedMembers = data.data?.members || data.project?.members || data.members || [];
+      setMembers(updatedMembers);
+      if (onMembersUpdated) onMembersUpdated(updatedMembers);
       toast.success("Member role updated");
     } catch (err) {
       const msg = err.response?.data?.message || "Failed to update role.";

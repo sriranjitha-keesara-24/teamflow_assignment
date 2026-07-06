@@ -10,6 +10,7 @@ import {
   FiLogOut,
   FiX,
   FiShield,
+  FiClipboard,
 } from "react-icons/fi";
 
 const Sidebar = ({ open, setOpen }) => {
@@ -72,6 +73,14 @@ const Sidebar = ({ open, setOpen }) => {
           <span>RCA Reports</span>
         </NavLink>
         <NavLink
+          to="/reviews"
+          className={({ isActive }) => `sidebar-link ${isActive ? "active" : ""}`}
+          onClick={() => setOpen(false)}
+        >
+          <FiClipboard />
+          <span>RCA Reviews</span>
+        </NavLink>
+        <NavLink
           to="/notifications"
           className={({ isActive }) => `sidebar-link ${isActive ? "active" : ""}`}
           onClick={() => setOpen(false)}
@@ -92,8 +101,8 @@ const Sidebar = ({ open, setOpen }) => {
       </nav>
 
       <div className="sidebar-footer">
-        <NavLink 
-          to="/profile" 
+        <NavLink
+          to="/profile"
           style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", textDecoration: "none" }}
           onClick={() => setOpen(false)}
         >

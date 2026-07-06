@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const ActivityLog = require("../models/ActivityLog");
 const { getUploadUrl } = require("./atachmentController");
 
 // @route   GET /api/v1/users?search=name-or-email
@@ -137,4 +138,20 @@ const toggleUserStatus = async (req, res, next) => {
   }
 };
 
-module.exports = { searchUsers, updateProfile, updateAvatar, adminGetUsers, toggleUserStatus };
+
+// @route   GET /api/v1/users/admin/audit-logs
+// @access  Private (Admin only)
+const getAuditLogs = async (req, res, next) => {
+  try {
+    const logs = await ActivityLog.find({})
+      .populate("user", "name email avatar")
+      .populate("project", "name")
+      .sort({ createdAt: -1 })
+      .limit(100);
+    res.status(200).json({ success: true, logs });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { searchUsers, updateProfile, updateAvatar, adminGetUsers, toggleUserStatus, getAuditLogs };

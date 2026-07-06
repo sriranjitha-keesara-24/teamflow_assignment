@@ -446,6 +446,22 @@ const getProjectStats = async (req, res, next) => {
     }
 };
 
+// @route   GET /api/v1/projects/:projectId/activities
+// @access  Private (Project members only)
+const getProjectActivities = async (req, res, next) => {
+    try {
+        const projectId = req.params.projectId || req.params.id;
+        const activities = await ActivityLog.find({ project: projectId })
+            .populate("user", "name email avatar")
+            .sort({ createdAt: -1 })
+            .limit(30);
+
+        res.status(200).json({ success: true, activities });
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     createProject,
     getProjects,
@@ -456,4 +472,5 @@ module.exports = {
     removeMember,
     updateMemberRole,
     getProjectStats,
+    getProjectActivities,
 };

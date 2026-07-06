@@ -3,7 +3,7 @@ const router = express.Router();
 const multer = require("multer");
 const path = require("path");
 
-const { searchUsers, updateProfile, updateAvatar, adminGetUsers, toggleUserStatus } = require("../controllers/Usercontroller");
+const { searchUsers, updateProfile, updateAvatar, adminGetUsers, toggleUserStatus, getAuditLogs } = require("../controllers/Usercontroller");
 const { protect } = require("../middleware/authMiddleware");
 const { requireRole } = require("../middleware/roleMiddleware");
 
@@ -27,6 +27,7 @@ router.put("/profile/avatar", upload.single("avatar"), updateAvatar);
 
 // Admin-only user management routes
 router.get("/admin/list", requireRole("Admin"), adminGetUsers);
+router.get("/admin/audit-logs", requireRole("Admin"), getAuditLogs);
 router.put("/:id/status", requireRole("Admin"), toggleUserStatus);
 
 module.exports = router;

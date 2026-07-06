@@ -3,6 +3,7 @@ import { commentService } from "../../services/commentService";
 import { getInitials, formatDate } from "../../utils/formatters";
 import { FiSend, FiEdit2, FiTrash2, FiX } from "react-icons/fi";
 import toast from "react-hot-toast";
+import api from "../../services/api";
 
 const CommentSection = ({ taskId }) => {
   const [comments, setComments] = useState([]);
@@ -10,6 +11,11 @@ const CommentSection = ({ taskId }) => {
   const [editingId, setEditingId] = useState(null);
   const [editingText, setEditingText] = useState("");
   const [loading, setLoading] = useState(true);
+  const [projectMembers, setProjectMembers] = useState([]);
+  const [showMentions, setShowMentions] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState("");
+  const [mentionIndex, setMentionIndex] = useState(-1);
+  const [selectedMentions, setSelectedMentions] = useState([]);
 
   const fetchComments = async () => {
     try {
@@ -23,17 +29,64 @@ const CommentSection = ({ taskId }) => {
   };
 
   useEffect(() => {
-    fetchComments();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const fetchProjectMembers = async () => {
+      try {
+        const taskRes = await api.get(`/tasks/${taskId}`);
+        const taskObj = taskRes.data?.data || taskRes.data;
+        const projId = taskObj.project?._id || taskObj.project;
+        if (projId) {
+          const projRes = await api.get(`/projects/${projId}`);
+          const projObj = projRes.data?.data || projRes.data;
+          setProjectMembers(projObj.members || []);
+        }
+      } catch (err) {
+        console.error("Failed to load project members for comments", err);
+      }
+    };
+    if (taskId) {
+      fetchComments();
+      fetchProjectMembers();
+    }
   }, [taskId]);
+
+  const handleTextareaChange = (e) => {
+    const val = e.target.value;
+    setNewComment(val);
+
+    const selectionStart = e.target.selectionStart;
+    const textBeforeCursor = val.slice(0, selectionStart);
+    const lastAtIdx = textBeforeCursor.lastIndexOf("@");
+
+    if (lastAtIdx !== -1) {
+      const query = textBeforeCursor.slice(lastAtIdx + 1);
+      if (!query.includes(" ")) {
+        setMentionQuery(query.toLowerCase());
+        setMentionIndex(lastAtIdx);
+        setShowMentions(true);
+        return;
+      }
+    }
+    setShowMentions(false);
+  };
+
+  const handleSelectMention = (member) => {
+    if (!member.user) return;
+    const textBefore = newComment.slice(0, mentionIndex);
+    const textAfter = newComment.slice(mentionIndex + mentionQuery.length + 1);
+    const updatedText = `${textBefore}@${member.user.name} ${textAfter}`;
+    setNewComment(updatedText);
+    setSelectedMentions((prev) => [...new Set([...prev, member.user._id])]);
+    setShowMentions(false);
+  };
 
   const handleSend = async (e) => {
     e.preventDefault();
     if (!newComment.trim()) return;
     try {
-      const res = await commentService.createComment(taskId, newComment);
+      const res = await commentService.createComment(taskId, newComment, selectedMentions);
       setComments((prev) => [...prev, res.comment || res.data]);
       setNewComment("");
+      setSelectedMentions([]);
       toast.success("Comment added");
     } catch (err) {
       toast.error("Could not send comment");
@@ -65,6 +118,13 @@ const CommentSection = ({ taskId }) => {
       toast.error("Could not delete comment");
     }
   };
+
+  const filteredMembers = projectMembers.filter(
+    (m) =>
+      m.user &&
+      m.user.name &&
+      m.user.name.toLowerCase().includes(mentionQuery)
+  );
 
   return (
     <div className="task-detail-section">
@@ -138,11 +198,55 @@ const CommentSection = ({ taskId }) => {
         </div>
       )}
 
-      <form className="comment-input-area" onSubmit={handleSend}>
+      <form className="comment-input-area" onSubmit={handleSend} style={{ position: "relative" }}>
+        {showMentions && filteredMembers.length > 0 && (
+          <div style={{
+            position: "absolute",
+            bottom: "100%",
+            left: 0,
+            background: "var(--color-surface)",
+            border: "1px solid var(--color-border)",
+            borderRadius: "var(--radius-md)",
+            boxShadow: "var(--shadow-lg)",
+            maxHeight: 180,
+            overflowY: "auto",
+            zIndex: 10,
+            minWidth: 220,
+            padding: "4px 0"
+          }}>
+            {filteredMembers.map((member) => (
+              <div
+                key={member.user._id}
+                onMouseDown={() => handleSelectMention(member)}
+                style={{
+                  padding: "8px 12px",
+                  cursor: "pointer",
+                  fontSize: 12,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  transition: "background 0.2s",
+                  borderBottom: "1px solid var(--color-border)"
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = "var(--color-surface-hover)"}
+                onMouseLeave={(e) => e.currentTarget.style.background = "none"}
+              >
+                <div className="avatar" style={{ width: 22, height: 22, fontSize: 8, flexShrink: 0 }}>
+                  {getInitials(member.user.name)}
+                </div>
+                <div style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
+                  <div style={{ fontWeight: 650, color: "var(--color-text)", whiteSpace: "nowrap" }}>{member.user.name}</div>
+                  <div style={{ fontSize: 10, color: "var(--color-text-muted)", whiteSpace: "nowrap" }}>{member.user.email}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
         <textarea
-          placeholder="Write a comment..."
+          placeholder="Write a comment... (use @ to mention)"
           value={newComment}
-          onChange={(e) => setNewComment(e.target.value)}
+          onChange={handleTextareaChange}
+          onBlur={() => setTimeout(() => setShowMentions(false), 200)}
         />
         <button
           type="submit"

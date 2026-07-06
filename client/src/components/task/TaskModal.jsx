@@ -6,6 +6,7 @@ import { FiX, FiExternalLink, FiTrash2 } from "react-icons/fi";
 import toast from "react-hot-toast";
 import SubtaskList from "./SubtaskList";
 import CommentSection from "./CommentSection";
+import api from "../../services/api";
 
 const PRIORITIES = ["Low", "Medium", "High", "Critical"];
 const STATUSES = ["Todo", "In Progress", "Review", "Completed"];
@@ -22,6 +23,14 @@ export default function TaskModal({ task, projectId, onClose, onUpdated }) {
   const [tagsInput, setTagsInput] = useState("");
   const [selectedAssignees, setSelectedAssignees] = useState([]);
   const [taskSubtasks, setTaskSubtasks] = useState([]);
+  const [recurrence, setRecurrence] = useState("None");
+  const [templates, setTemplates] = useState([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState("");
+  const [timeLogs, setTimeLogs] = useState([]);
+  const [activeTimer, setActiveTimer] = useState(null);
+  const [timerSeconds, setTimerSeconds] = useState(0);
+  const [manualMinutes, setManualMinutes] = useState("");
+  const [manualDescription, setManualDescription] = useState("");
 
   // Project members & other tasks (for dependencies)
   const [members, setMembers] = useState([]);
@@ -59,6 +68,10 @@ export default function TaskModal({ task, projectId, onClose, onUpdated }) {
         const allTasks = tasksRes.tasks || tasksRes.data || tasksRes || [];
         setOtherTasks(allTasks.filter((t) => !isEdit || t._id !== task._id));
 
+        // Fetch task templates
+        const templatesRes = await api.get(`/projects/${projectId}/templates`);
+        setTemplates(templatesRes.data?.data || templatesRes.data || []);
+
         if (isEdit) {
           setTitle(task.title || "");
           setDescription(task.description || "");
@@ -68,6 +81,9 @@ export default function TaskModal({ task, projectId, onClose, onUpdated }) {
           setTagsInput(task.tags?.join(", ") || "");
           setSelectedAssignees(task.assignees?.map((a) => a._id || a) || []);
           setTaskSubtasks(task.subtasks || []);
+          setRecurrence(task.recurrence || "None");
+          setTimeLogs(task.timeLogs || []);
+          setActiveTimer(task.activeTimer || null);
 
           // Load dependencies graph
           const graph = await taskService.getDependencyGraph(projectId);
@@ -80,6 +96,118 @@ export default function TaskModal({ task, projectId, onClose, onUpdated }) {
 
     loadModalData();
   }, [projectId, task, isEdit]);
+
+  useEffect(() => {
+    let interval = null;
+    if (activeTimer && activeTimer.startTime) {
+      const start = new Date(activeTimer.startTime);
+      interval = setInterval(() => {
+        const diffMs = new Date() - start;
+        setTimerSeconds(Math.floor(diffMs / 1000));
+      }, 1000);
+    } else {
+      setTimerSeconds(0);
+    }
+    return () => clearInterval(interval);
+  }, [activeTimer]);
+
+  const formatStopwatch = (totalSeconds) => {
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+  };
+
+  const handleStartTimer = async () => {
+    try {
+      const res = await api.post(`/projects/${projectId}/tasks/${task._id}/timer/start`);
+      const data = res.data?.activeTimer || res.activeTimer || res;
+      setActiveTimer(data);
+      toast.success("Timer started");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to start timer");
+    }
+  };
+
+  const handleStopTimer = async () => {
+    const desc = window.prompt("Enter brief description of work completed (optional):");
+    try {
+      const res = await api.post(`/projects/${projectId}/tasks/${task._id}/timer/stop`, { description: desc || "" });
+      const logs = res.data?.timeLogs || res.timeLogs;
+      setTimeLogs(logs || []);
+      setActiveTimer(null);
+      toast.success("Timer stopped & logged successfully");
+      if (onUpdated) onUpdated();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to stop timer");
+    }
+  };
+
+  const handleLogManualTime = async (e) => {
+    e.preventDefault();
+    if (!manualMinutes || isNaN(manualMinutes) || parseFloat(manualMinutes) <= 0) {
+      toast.error("Please enter a valid duration in minutes");
+      return;
+    }
+    try {
+      const res = await api.post(`/projects/${projectId}/tasks/${task._id}/time-log`, {
+        duration: parseFloat(manualMinutes),
+        description: manualDescription
+      });
+      const logs = res.data?.timeLogs || res.timeLogs;
+      setTimeLogs(logs || []);
+      setManualMinutes("");
+      setManualDescription("");
+      toast.success("Logged manual time successfully");
+      if (onUpdated) onUpdated();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to log manual time");
+    }
+  };
+
+  const handleSaveAsTemplate = async () => {
+    const templateName = window.prompt("Enter a name for the task template:");
+    if (!templateName || !templateName.trim()) return;
+
+    try {
+      const subtasks = taskSubtasks.map((s) => ({ title: s.title }));
+      const tags = tagsInput
+        .split(",")
+        .map((t) => t.trim())
+        .filter((t) => t.length > 0);
+
+      const templatePayload = {
+        name: templateName.trim(),
+        title,
+        description,
+        priority,
+        tags,
+        subtasks,
+      };
+
+      const res = await api.post(`/projects/${projectId}/templates`, templatePayload);
+      const newTemplate = res.data?.data || res.data;
+      setTemplates((prev) => [newTemplate, ...prev]);
+      toast.success("Task template saved successfully");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to save template");
+    }
+  };
+
+  const handleApplyTemplate = (templateId) => {
+    setSelectedTemplateId(templateId);
+    if (!templateId) return;
+
+    const template = templates.find((t) => t._id === templateId);
+    if (template) {
+      setTitle(template.title || "");
+      setDescription(template.description || "");
+      setPriority(template.priority || "Medium");
+      setTagsInput(template.tags?.join(", ") || "");
+      setTaskSubtasks(template.subtasks || []);
+      toast.success(`Applied template "${template.name}"`);
+    }
+  };
 
   const handleSubmit = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
@@ -101,6 +229,7 @@ export default function TaskModal({ task, projectId, onClose, onUpdated }) {
       dueDate: dueDate || null,
       tags,
       assignees: selectedAssignees,
+      recurrence,
     };
 
     try {
@@ -198,6 +327,22 @@ export default function TaskModal({ task, projectId, onClose, onUpdated }) {
                 </div>
               )}
 
+              {templates.length > 0 && (
+                <div className="form-group" style={{ marginBottom: 16 }}>
+                  <label>Prefill from Task Template</label>
+                  <select
+                    value={selectedTemplateId}
+                    onChange={(e) => handleApplyTemplate(e.target.value)}
+                    style={{ width: "100%", background: "var(--color-primary-dim)", borderColor: "var(--color-primary)" }}
+                  >
+                    <option value="">-- Select a template --</option>
+                    {templates.map((temp) => (
+                      <option key={temp._id} value={temp._id}>{temp.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               <div className="form-group">
                 <label>Task Title</label>
                 <input
@@ -257,6 +402,33 @@ export default function TaskModal({ task, projectId, onClose, onUpdated }) {
                     value={tagsInput}
                     onChange={(e) => setTagsInput(e.target.value)}
                   />
+                </div>
+              </div>
+
+              <div className="task-form-row">
+                <div className="form-group">
+                  <label>Recurrence</label>
+                  <select
+                    value={recurrence}
+                    onChange={(e) => setRecurrence(e.target.value)}
+                    style={{ width: "100%" }}
+                  >
+                    <option value="None">None</option>
+                    <option value="Daily">Daily</option>
+                    <option value="Weekly">Weekly</option>
+                    <option value="Monthly">Monthly</option>
+                  </select>
+                </div>
+                <div className="form-group" style={{ display: "flex", alignItems: "flex-end" }}>
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm"
+                    style={{ width: "100%", height: 38 }}
+                    onClick={handleSaveAsTemplate}
+                    disabled={!title.trim()}
+                  >
+                    Save as Template
+                  </button>
                 </div>
               </div>
 
@@ -398,6 +570,16 @@ export default function TaskModal({ task, projectId, onClose, onUpdated }) {
               />
             </div>
 
+            <div className="form-group">
+              <label style={{ fontWeight: 600, fontSize: 13, color: "var(--color-text-secondary)", marginBottom: 6, display: "block" }}>Recurrence</label>
+              <select value={recurrence} onChange={(e) => setRecurrence(e.target.value)} style={{ width: "100%" }}>
+                <option value="None">None</option>
+                <option value="Daily">Daily</option>
+                <option value="Weekly">Weekly</option>
+                <option value="Monthly">Monthly</option>
+              </select>
+            </div>
+
             {/* Assignees selection list */}
             <div className="form-group">
               <label style={{ fontWeight: 600, fontSize: 13, color: "var(--color-text-secondary)", marginBottom: 6, display: "block" }}>Assignees</label>
@@ -450,7 +632,7 @@ export default function TaskModal({ task, projectId, onClose, onUpdated }) {
               )}
 
               {/* Add new dependency */}
-              <div style={{ display: "flex", gap: 6 }}>
+              <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
                 <select
                   value={selectedPredecessor}
                   onChange={(e) => setSelectedPredecessor(e.target.value)}
@@ -470,6 +652,87 @@ export default function TaskModal({ task, projectId, onClose, onUpdated }) {
                   Add
                 </button>
               </div>
+            </div>
+
+            {/* Time Tracking Widget */}
+            <div style={{ paddingTop: 16, borderTop: "1px solid var(--color-border)", display: "flex", flexDirection: "column", gap: 10 }}>
+              <label style={{ fontSize: 13, fontWeight: 600, color: "var(--color-text-secondary)" }}>
+                Time Tracking
+              </label>
+              
+              {/* Timer Controls */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "var(--color-surface-hover)", padding: 12, borderRadius: "var(--radius-md)", border: "1px solid var(--color-border)" }}>
+                {activeTimer ? (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                    <span style={{ fontSize: 11, color: "var(--color-text-muted)" }}>Timer Running</span>
+                    <strong style={{ fontFamily: "var(--font-mono)", fontSize: 18, color: "var(--color-danger)" }}>
+                      {formatStopwatch(timerSeconds)}
+                    </strong>
+                  </div>
+                ) : (
+                  <span style={{ fontSize: 12.5, color: "var(--color-text-secondary)" }}>No active timer</span>
+                )}
+                
+                {activeTimer ? (
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-danger"
+                    onClick={handleStopTimer}
+                  >
+                    Stop & Log
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-primary"
+                    onClick={handleStartTimer}
+                  >
+                    Start Timer
+                  </button>
+                )}
+              </div>
+
+              {/* Manual Time Logging Form */}
+              <form onSubmit={handleLogManualTime} style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                <input
+                  type="number"
+                  placeholder="Mins"
+                  value={manualMinutes}
+                  onChange={(e) => setManualMinutes(e.target.value)}
+                  style={{ width: 64, height: 32, padding: "0 6px", fontSize: 11 }}
+                />
+                <input
+                  type="text"
+                  placeholder="Work description..."
+                  value={manualDescription}
+                  onChange={(e) => setManualDescription(e.target.value)}
+                  style={{ flex: 1, height: 32, padding: "0 6px", fontSize: 11 }}
+                />
+                <button type="submit" className="btn btn-xs btn-secondary" style={{ height: 32 }}>
+                  Log
+                </button>
+              </form>
+
+              {/* Log History */}
+              {timeLogs.length > 0 && (
+                <div>
+                  <span style={{ fontSize: 11.5, fontWeight: 600, color: "var(--color-text-muted)", display: "block", marginBottom: 6 }}>
+                    Logged History ({parseFloat((timeLogs.reduce((sum, entry) => sum + (entry.duration || 0), 0) / 60).toFixed(1))} hrs total)
+                  </span>
+                  <div style={{ maxHeight: 110, overflowY: "auto", display: "flex", flexDirection: "column", gap: 6 }}>
+                    {timeLogs.map((log, idx) => (
+                      <div key={idx} style={{ display: "flex", justifyContent: "space-between", fontSize: 11, background: "var(--color-surface-hover)", padding: "4px 8px", borderRadius: "var(--radius-sm)" }}>
+                        <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", paddingRight: 4 }}>
+                          <strong>{log.duration}m</strong>: {log.description}
+                        </span>
+                        <span style={{ color: "var(--color-text-muted)", flexShrink: 0 }}>
+                          {log.user?.name || "Member"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

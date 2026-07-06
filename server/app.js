@@ -18,6 +18,7 @@ const { projectRcaRouter, rcaRouter } = require('./routes/rcaRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const searchRoutes = require('./routes/searchRoutes');
+const taskTemplateRoutes = require('./routes/taskTemplateRoutes');
 
 
 const app = express();
@@ -80,6 +81,7 @@ app.use('/api/v1/rca', rcaRouter);
 app.use('/api/v1/notifications', notificationRoutes);
 app.use('/api/v1/projects/:projectId/reports', reportRoutes);
 app.use('/api/v1/search', searchRoutes);
+app.use('/api/v1/projects/:projectId/templates', taskTemplateRoutes);
 
 
 // 404 + error handling (must be last)

@@ -10,8 +10,10 @@ const {
   removeMember,
   updateMemberRole,
   getProjectStats,
+  getProjectActivities,
 } = require('../controllers/projectController');
 const { protect } = require('../middleware/authMiddleware');
+const { isProjectMember } = require('../middleware/roleMiddleware');
 
 // All project routes require authentication
 router.use(protect);
@@ -23,8 +25,9 @@ router.get('/:id', getProjectById);
 router.put('/:id', updateProject);
 router.delete('/:id', deleteProject);
 
-// Project stats
+// Project stats & activity log
 router.get('/:id/stats', getProjectStats);
+router.get('/:projectId/activities', isProjectMember, getProjectActivities);
 
 // Member management
 router.post('/:id/members', addMember);

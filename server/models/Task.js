@@ -65,6 +65,30 @@ const taskSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    recurrence: {
+      type: String,
+      enum: ['None', 'Daily', 'Weekly', 'Monthly'],
+      default: 'None',
+    },
+    timeLogs: [
+      {
+        user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+        startTime: Date,
+        endTime: Date,
+        duration: Number, // in minutes
+        description: String,
+      },
+    ],
+    activeTimer: {
+      user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+      startTime: Date,
+    },
+    statusHistory: [
+      {
+        status: { type: String, required: true },
+        updatedAt: { type: Date, default: Date.now },
+      },
+    ],
   },
   {
     timestamps: true,
@@ -72,6 +96,16 @@ const taskSchema = new mongoose.Schema(
     toObject: { virtuals: true },
   }
 );
+
+// Pre-save hook to populate statusHistory automatically
+taskSchema.pre('save', function (next) {
+  if (this.isNew) {
+    this.statusHistory = [{ status: this.status, updatedAt: new Date() }];
+  } else if (this.isModified('status')) {
+    this.statusHistory.push({ status: this.status, updatedAt: new Date() });
+  }
+  next();
+});
 
 // Indexes for common query patterns
 taskSchema.index({ project: 1, status: 1 });

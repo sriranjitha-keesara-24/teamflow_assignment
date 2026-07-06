@@ -55,3 +55,8 @@ export const searchUsers = async (search) => {
   return data;
 };
 
+export const getProjectActivities = async (id) => {
+  const { data } = await api.get(`/projects/${id}/activities`);
+  return data;
+};
+
